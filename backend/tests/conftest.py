@@ -24,10 +24,12 @@ def db_session(monkeypatch):
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
 
+    import app.config
     import app.db
     import app.services.evaluation
     import app.services.ingestion
     import app.services.llm_client
+    monkeypatch.setattr(app.config.settings, "LLM_MOCK", True)
     monkeypatch.setattr(app.db, "SessionLocal", TestingSessionLocal)
     monkeypatch.setattr(app.services.ingestion, "SessionLocal", TestingSessionLocal)
     monkeypatch.setattr(app.services.evaluation, "SessionLocal", TestingSessionLocal)

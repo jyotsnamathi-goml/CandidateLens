@@ -15,6 +15,7 @@ import time
 from pathlib import Path
 from typing import Type, TypeVar
 
+import httpx
 from openai import APIError, OpenAI, RateLimitError
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
@@ -198,7 +199,10 @@ def call_structured(
         return result
 
     # 3. Real OpenAI Call with retry
-    client = OpenAI(api_key=settings.OPENAI_API_KEY, timeout=60.0)
+    client = OpenAI(
+        api_key=settings.OPENAI_API_KEY,
+        http_client=httpx.Client(timeout=60.0),
+    )
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
