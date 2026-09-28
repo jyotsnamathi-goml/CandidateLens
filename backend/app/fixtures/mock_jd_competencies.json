@@ -1,0 +1,36 @@
+{
+  "role_title": "Senior Backend Engineer - Distributed Systems",
+  "role_family": "backend",
+  "competencies": [
+    {
+      "name": "Distributed System Design & Concurrency",
+      "description": "Designing high-throughput, fault-tolerant architectures, managing state, caching, and race conditions.",
+      "rank": 1,
+      "importance": "critical"
+    },
+    {
+      "name": "Database Internals & Data Modeling",
+      "description": "SQL schema design, query optimization, indexing strategies, transactions, and ACID guarantees.",
+      "rank": 2,
+      "importance": "critical"
+    },
+    {
+      "name": "API Architecture & Reliability",
+      "description": "REST/gRPC interfaces, idempotency, rate limiting, and defensive resilience patterns.",
+      "rank": 3,
+      "importance": "important"
+    },
+    {
+      "name": "Observability & Performance Profiling",
+      "description": "Distributed tracing, telemetry, latency profiling, and root-cause incident analysis.",
+      "rank": 4,
+      "importance": "important"
+    },
+    {
+      "name": "Infrastructure & CI/CD Discipline",
+      "description": "Containerization, automated deployment pipelines, and zero-downtime database migrations.",
+      "rank": 5,
+      "importance": "nice_to_have"
+    }
+  ]
+}

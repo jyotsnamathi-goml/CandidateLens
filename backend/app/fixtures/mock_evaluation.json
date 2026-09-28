@@ -1,0 +1,230 @@
+{
+  "per_question": [
+    {
+      "question_id": "q1",
+      "competency": "Distributed System Design & Concurrency",
+      "technical_correctness": {
+        "score": 5,
+        "quote": "guarantee idempotent execution by inserting an idempotency key with unique constraint in PostgreSQL within the same database transaction"
+      },
+      "technical_depth": {
+        "score": 4,
+        "quote": "attach a monotonically increasing fencing token to the lock renewal lease to prevent split-brain write conflicts"
+      },
+      "mechanism": {
+        "score": 4,
+        "quote": "Redis Redlock verifies quorum across independent master nodes and issues a token with TTL"
+      },
+      "trade_offs": {
+        "score": 4,
+        "quote": "Redis distributed locking adds network overhead; if absolute consistency is paramount under network partition, relying on PostgreSQL advisory locks is safer"
+      },
+      "problem_solving": {
+        "score": 4,
+        "quote": "if the payment gateway times out, we mark the record as PENDING_VERIFICATION rather than failing immediately"
+      },
+      "communication": {
+        "score": 4,
+        "quote": "structured into state verification, locking protocol, and transaction settlement"
+      },
+      "specificity": {
+        "score": 4,
+        "quote": "using Redis TTL of 3000ms with 3 retry attempts spaced 200ms apart with jitter"
+      }
+    },
+    {
+      "question_id": "q2",
+      "competency": "Database Internals & Data Modeling",
+      "technical_correctness": {
+        "score": 5,
+        "quote": "use declarative range partitioning on created_at and create local indexes using CREATE INDEX CONCURRENTLY"
+      },
+      "technical_depth": {
+        "score": 4,
+        "quote": "partition pruning enables the query planner to skip scanning older table partitions entirely"
+      },
+      "mechanism": {
+        "score": 4,
+        "quote": "PostgreSQL attaches check constraints automatically to each monthly child table"
+      },
+      "trade_offs": {
+        "score": 4,
+        "quote": "partitioning increases planning overhead slightly for cross-partition queries, but isolates disk I/O for 90% of our recent lookups"
+      },
+      "problem_solving": {
+        "score": 4,
+        "quote": "migrating 180M rows live requires backfilling into monthly partitions in chunks of 50,000 with sleeps to avoid saturating WAL replication"
+      },
+      "communication": {
+        "score": 5,
+        "quote": "clearly walked through partition design, non-blocking index creation, and safe backfill"
+      },
+      "specificity": {
+        "score": 4,
+        "quote": "batched chunks of 50,000 rows with 100ms pause to keep replication lag under 2s"
+      }
+    },
+    {
+      "question_id": "q3",
+      "competency": "API Architecture & Reliability",
+      "technical_correctness": {
+        "score": 4,
+        "quote": "wrap downstream calls in a circuit breaker configured with a 500ms timeout and a 50% error threshold"
+      },
+      "technical_depth": {
+        "score": 4,
+        "quote": "isolate the thread and connection pool using bulkhead pattern so exhaustion in downstream service does not block checkout endpoints"
+      },
+      "mechanism": {
+        "score": 4,
+        "quote": "the circuit transitions to OPEN after 10 consecutive failures and probes recovery in HALF-OPEN state after 30 seconds"
+      },
+      "trade_offs": {
+        "score": 3,
+        "quote": "failing fast degrades user experience for that feature but preserves system availability"
+      },
+      "problem_solving": {
+        "score": 4,
+        "quote": "fallback mechanism returns cached recommendation data or enqueues non-critical work to SQS"
+      },
+      "communication": {
+        "score": 4,
+        "quote": "concise explanation of circuit states and timeout strategies"
+      },
+      "specificity": {
+        "score": 4,
+        "quote": "dedicated connection pool capped at 25 connections for that external vendor"
+      }
+    },
+    {
+      "question_id": "q4",
+      "competency": "Observability & Performance Profiling",
+      "technical_correctness": {
+        "score": 4,
+        "quote": "examine trace span waterfalls in Jaeger to see where time is spent between DB connection acquisition and query execution"
+      },
+      "technical_depth": {
+        "score": 4,
+        "quote": "when CPU is low but latency is high, the primary suspect is thread or connection pool contention or lock waits"
+      },
+      "mechanism": {
+        "score": 4,
+        "quote": "OpenTelemetry spans propagate trace context headers across microservice HTTP boundaries"
+      },
+      "trade_offs": {
+        "score": 3,
+        "quote": "sampling 100% of traces during flash sales adds overhead; adaptive sampling at 5% preserves performance"
+      },
+      "problem_solving": {
+        "score": 5,
+        "quote": "systematically isolated the issue to connection pool starvation by checking pg_stat_activity waiting queries"
+      },
+      "communication": {
+        "score": 4,
+        "quote": "structured root-cause hypothesis tree"
+      },
+      "specificity": {
+        "score": 4,
+        "quote": "checked HikariCP active vs idle connections and pg_stat_activity lock wait states"
+      }
+    },
+    {
+      "question_id": "q5",
+      "competency": "Distributed System Design & Concurrency",
+      "technical_correctness": {
+        "score": 4,
+        "quote": "heartbeat renewals are sent every 3 seconds for a 10-second lock; if renewal fails due to GC pause, the worker must abort commit"
+      },
+      "technical_depth": {
+        "score": 4,
+        "quote": "used fencing tokens checked atomically in the database state update to reject stale writes from paused workers"
+      },
+      "mechanism": {
+        "score": 4,
+        "quote": "Redis lease expiration triggers clean worker takeover while fencing tokens guard DB writes"
+      },
+      "trade_offs": {
+        "score": 4,
+        "quote": "fencing tokens require monotonic counters in storage, which couples lock management to persistence layer"
+      },
+      "problem_solving": {
+        "score": 4,
+        "quote": "tested worker failure scenarios using SIGSTOP to simulate long JVM/Python stop-the-world pauses"
+      },
+      "communication": {
+        "score": 4,
+        "quote": "clear breakdown of pause detection and stale write avoidance"
+      },
+      "specificity": {
+        "score": 4,
+        "quote": "simulated 15s pause using SIGSTOP and validated that the second worker rejected the late commit"
+      }
+    },
+    {
+      "question_id": "q6",
+      "competency": "Database Internals & Data Modeling",
+      "technical_correctness": {
+        "score": 4,
+        "quote": "identified sequential scan in ledger reconciliation query due to missing composite index on (account_id, created_at DESC)"
+      },
+      "technical_depth": {
+        "score": 4,
+        "quote": "EXPLAIN ANALYZE showed 4.2 million buffer reads; creating a partial composite B-Tree index reduced execution time from 3.8s to 12ms"
+      },
+      "mechanism": {
+        "score": 4,
+        "quote": "index-only scan satisfied both the filter and the sort without touching the heap"
+      },
+      "trade_offs": {
+        "score": 4,
+        "quote": "the composite index added approximately 1.4GB of storage and marginally slowed high-frequency write inserts"
+      },
+      "problem_solving": {
+        "score": 4,
+        "quote": "benchmarked write throughput impact with pgbench before deploying to production"
+      },
+      "communication": {
+        "score": 4,
+        "quote": "direct personal account of diagnosis, metric verification, and trade-off acceptance"
+      },
+      "specificity": {
+        "score": 5,
+        "quote": "query dropped from 3,800ms with 4.2M buffer reads to 12ms with 4 buffer reads"
+      }
+    }
+  ],
+  "evidence_consistency": "high",
+  "consistency_rationale": "Candidate demonstrated deep, consistent technical knowledge aligning with their resume claims and GitHub project implementation details, providing exact metrics and realistic trade-off nuances.",
+  "flags": [],
+  "strengths": [
+    {
+      "text": "Deep practical mastery of distributed locking, lease renewals, and fencing tokens to prevent split-brain write conflicts.",
+      "refs": ["ev_001", "cl_001", "q1", "q5"]
+    },
+    {
+      "text": "Extensive real-world experience with PostgreSQL query optimization, declarative partitioning, and zero-downtime indexing.",
+      "refs": ["ev_002", "cl_002", "q2", "q6"]
+    },
+    {
+      "text": "Rigorous failure-mode thinking incorporating circuit breakers, bulkhead isolation, and graceful degradation.",
+      "refs": ["q3", "q4"]
+    }
+  ],
+  "gaps": [
+    {
+      "text": "Limited explicit discussion of gRPC or multi-region cross-datacenter replication protocols.",
+      "refs": ["q3"]
+    }
+  ],
+  "verification_points": [],
+  "interview_probes": [
+    "Ask candidate how they would handle cross-region multi-master database replication conflicts in their payment ledger architecture.",
+    "Probe on how their distributed task scheduler handles network partitioning when Redis master and PostgreSQL database are on different sides of a network split."
+  ],
+  "competencies_assessed": [
+    "Distributed System Design & Concurrency",
+    "Database Internals & Data Modeling",
+    "API Architecture & Reliability",
+    "Observability & Performance Profiling"
+  ]
+}

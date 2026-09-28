@@ -1,0 +1,94 @@
+{
+  "questions": [
+    {
+      "question_id": "q1",
+      "kind": "jd_scenario",
+      "competency": "Distributed System Design & Concurrency",
+      "evidence_refs": [],
+      "text": "Your team runs an order processing system where two payment webhooks from Stripe arrive concurrently for the same customer checkout within 5ms. Walk through how you would architect the backend to guarantee idempotent execution, prevent double-charging or dual order fulfillment, and handle Redis lock acquisition timeouts gracefully.",
+      "what_good_looks_like": [
+        "Identifies database unique constraints or transactional isolation levels as the ultimate source of truth",
+        "Discusses idempotency keys stored with distinct processing states (e.g., PENDING, COMPLETED)",
+        "Explains token expiration and fencing tokens to prevent zombie lock writes",
+        "Addresses failure modes such as network timeout vs actual payment failure"
+      ],
+      "follow_up_if_vague": "Could you specify the exact locking mechanism or database transaction isolation level you would use to prevent both workers from proceeding past the check stage?",
+      "follow_up_if_strong": "How would you handle clock skew if using multi-node distributed locks like Redlock across AWS availability zones?"
+    },
+    {
+      "question_id": "q2",
+      "kind": "jd_scenario",
+      "competency": "Database Internals & Data Modeling",
+      "evidence_refs": [],
+      "text": "A PostgreSQL table recording audit logs has grown to 180 million rows. Analytical queries scanning the past 30 days are triggering sequential disk scans and spiking database CPU to 95%. Explain how you would restructure the table indexing or partitioning without causing production downtime or prolonged locks.",
+      "what_good_looks_like": [
+        "Proposes declarative range partitioning by timestamp",
+        "Mentions CREATE INDEX CONCURRENTLY to avoid blocking table writes",
+        "Considers pg_repack or shadow table migration strategies for existing data",
+        "Discusses query planner behavior with partition pruning"
+      ],
+      "follow_up_if_vague": "What command or mechanism would you use to build the necessary index without locking writes on an active production table?",
+      "follow_up_if_strong": "How would you automate partition creation and retention drops as time progresses?"
+    },
+    {
+      "question_id": "q3",
+      "kind": "jd_scenario",
+      "competency": "API Architecture & Reliability",
+      "evidence_refs": [],
+      "text": "A downstream microservice in your checkout flow starts degrading, experiencing 8-second p99 latency spikes and intermittent 503 errors. How do you design your upstream API client to prevent thread pool exhaustion and cascading failure across the entire platform?",
+      "what_good_looks_like": [
+        "Explains circuit breaker pattern with open/half-open/closed state transitions",
+        "Specifies aggressive client timeouts (e.g. 500ms) with exponential backoff and jitter",
+        "Proposes bulkhead isolation pattern to compartmentalize thread/connection pools",
+        "Mentions fallback degradations like returning cached data or queued async processing"
+      ],
+      "follow_up_if_vague": "What pattern would immediately fast-fail requests to the failing service rather than waiting for 8-second socket timeouts?",
+      "follow_up_if_strong": "How would you tune the error rate thresholds and cooldown intervals for the circuit breaker?"
+    },
+    {
+      "question_id": "q4",
+      "kind": "jd_scenario",
+      "competency": "Observability & Performance Profiling",
+      "evidence_refs": [],
+      "text": "During a flash sale, API response latency suddenly climbs from 45ms to 1,200ms, but server CPU and memory usage remain below 30%. Detail your structured debugging process using logs, metrics, and distributed traces to pinpoint the root cause.",
+      "what_good_looks_like": [
+        "Checks connection pool exhaustion (database, Redis, HTTP clients)",
+        "Analyzes span waterfalls in distributed traces to isolate waiting vs execution time",
+        "Checks lock contention, synchronous external I/O, or DNS resolution bottlenecks",
+        "Correlates RED metrics (Rate, Errors, Duration) across service boundaries"
+      ],
+      "follow_up_if_vague": "Which specific telemetry data would immediately show whether requests are waiting in a queue versus executing slow code?",
+      "follow_up_if_strong": "If the trace shows 1,100ms spent in 'acquire_connection', what specific PostgreSQL and connection pool metrics would you inspect next?"
+    },
+    {
+      "question_id": "q5",
+      "kind": "project_specific",
+      "competency": "Distributed System Design & Concurrency",
+      "evidence_refs": ["ev_001"],
+      "text": "In your Distributed Task Scheduler (TaskFlow) project, you implemented worker failover and distributed locking. When a worker node experiences a 15-second garbage collection pause while holding a task lock, how does your system avoid split-brain execution where a second worker assumes the task before the first finishes?",
+      "what_good_looks_like": [
+        "Articulates lease renewal / lock heartbeat mechanisms",
+        "Discusses fencing tokens or monotonically increasing version counters checked at write time",
+        "Recognizes that lock expiration without fencing cannot guarantee mutual exclusion during GC pauses",
+        "Explains how the worker handles discovering its lock has lapsed"
+      ],
+      "follow_up_if_vague": "When the paused worker wakes up, how does it know whether its lock expired and another worker took over?",
+      "follow_up_if_strong": "How did you benchmark the system to confirm worker failover completed in under 5 seconds?"
+    },
+    {
+      "question_id": "q6",
+      "kind": "verification",
+      "competency": "Database Internals & Data Modeling",
+      "evidence_refs": ["ev_002", "cl_002"],
+      "text": "You noted optimizing PostgreSQL schemas and connection pooling for a 50M records/month ledger in the Payment Ingestion Engine. Walk us through a specific query or transaction bottleneck you personally resolved: what was the EXPLAIN ANALYZE output before, what change did you make, and what trade-offs did you accept?",
+      "what_good_looks_like": [
+        "Recalls a realistic schema bottleneck (e.g. index scan vs seq scan, unindexed foreign key lock, bloated toast table)",
+        "Explains concrete EXPLAIN ANALYZE findings such as buffer hits, disk reads, or sort nodes",
+        "Discusses trade-offs like increased write latency or index maintenance overhead",
+        "Demonstrates direct hands-on ownership of the solution"
+      ],
+      "follow_up_if_vague": "Could you provide details on what indexing strategy or query rewrite you used, and how it affected write performance?",
+      "follow_up_if_strong": "Did you need to tune autovacuum or work_mem parameters to sustain that optimization?"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "backend": [
+    {
+      "question_id": "q1",
+      "kind": "jd_scenario",
+      "competency": "{competency_1}",
+      "evidence_refs": [],
+      "text": "In a distributed backend environment, two microservices attempt to update the same financial or state resource simultaneously under high concurrent traffic. Walk through how you architect consistency, concurrency control, and timeout handling.",
+      "what_good_looks_like": [
+        "Considers distributed locking vs database row-level locking",
+        "Mentions idempotency keys and state machines",
+        "Discusses failure and timeout rollbacks"
+      ],
+      "follow_up_if_vague": "What specific database isolation level or locking mechanism would you use to prevent duplicate writes?",
+      "follow_up_if_strong": "How would you handle clock skew if using TTL-based distributed locks?"
+    },
+    {
+      "question_id": "q2",
+      "kind": "jd_scenario",
+      "competency": "{competency_2}",
+      "evidence_refs": [],
+      "text": "A critical database query scanning millions of rows has begun degrading latency and exhausting connection pools under peak load. How would you analyze the query plan, optimize indexing or schema design, and deploy the fix with zero downtime?",
+      "what_good_looks_like": [
+        "Mentions EXPLAIN ANALYZE inspection",
+        "Considers non-blocking index creation or table partitioning",
+        "Discusses connection pool tuning and read replicas"
+      ],
+      "follow_up_if_vague": "What command or mechanism would you use to create the index without locking writes?",
+      "follow_up_if_strong": "How do you avoid replication lag spikes while backfilling indexes?"
+    },
+    {
+      "question_id": "q3",
+      "kind": "jd_scenario",
+      "competency": "{competency_3}",
+      "evidence_refs": [],
+      "text": "An external upstream API client frequently experiences intermittent network timeouts and 5xx errors. How do you design client-side resilience to prevent cascading thread pool exhaustion throughout your system?",
+      "what_good_looks_like": [
+        "Circuit breaker pattern with state management",
+        "Timeouts with exponential backoff and jitter",
+        "Bulkhead isolation for connection pools"
+      ],
+      "follow_up_if_vague": "What design pattern prevents your workers from waiting on dead upstream socket connections?",
+      "follow_up_if_strong": "How do you determine healthy retry limits vs failing fast?"
+    },
+    {
+      "question_id": "q4",
+      "kind": "jd_scenario",
+      "competency": "{competency_4}",
+      "evidence_refs": [],
+      "text": "During an incident, API latency surges to 2 seconds while CPU and memory remain low. Walk through your step-by-step telemetry and profiling methodology to isolate the bottleneck.",
+      "what_good_looks_like": [
+        "Inspects distributed traces and span waterfalls",
+        "Checks connection pool saturation and lock contention",
+        "Differentiates waiting time from execution time"
+      ],
+      "follow_up_if_vague": "Which specific metrics or trace attributes would you inspect first to confirm pool starvation?",
+      "follow_up_if_strong": "How do you distinguish between network latency and database lock acquisition delay?"
+    },
+    {
+      "question_id": "q5",
+      "kind": "project_specific",
+      "competency": "{competency_1}",
+      "evidence_refs": ["ev_001"],
+      "text": "Reflecting on your primary backend project, describe the most challenging edge case or failure mode you encountered. How did your architecture respond, and what changes did you make to safeguard against it in the future?",
+      "what_good_looks_like": [
+        "Concrete technical failure scenario",
+        "Clear explanation of why it occurred",
+        "Actionable architectural remediation"
+      ],
+      "follow_up_if_vague": "What monitoring alert or metric first alerted you to this failure?",
+      "follow_up_if_strong": "What trade-offs did your mitigation introduce?"
+    },
+    {
+      "question_id": "q6",
+      "kind": "verification",
+      "competency": "{competency_2}",
+      "evidence_refs": ["ev_002"],
+      "text": "In your resume and project claims, you mentioned key architectural contributions. Walk us through a specific technical trade-off you personally owned: what alternatives were considered, why was the chosen approach selected, and what were its drawbacks?",
+      "what_good_looks_like": [
+        "Explains concrete alternatives",
+        "Articulates scenario-specific trade-offs",
+        "Demonstrates direct technical ownership"
+      ],
+      "follow_up_if_vague": "What was the main reason you rejected the primary alternative solution?",
+      "follow_up_if_strong": "Under what changed constraints would you choose that rejected alternative today?"
+    }
+  ]
+}

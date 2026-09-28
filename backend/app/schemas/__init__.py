@@ -1,0 +1,1 @@
+# CandidateLens schemas package

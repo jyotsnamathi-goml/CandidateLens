@@ -1,0 +1,128 @@
+{
+  "evidence": [
+    {
+      "evidence_id": "ev_001",
+      "type": "project",
+      "title": "Distributed Task Scheduler (TaskFlow)",
+      "technologies": ["Python", "FastAPI", "Redis", "PostgreSQL", "Docker"],
+      "role": "Lead Architect",
+      "responsibilities": [
+        "Implemented distributed locking via Redis Redlock algorithm",
+        "Built heartbeat detection and automatic worker failover",
+        "Wrote zero-downtime database migration scripts"
+      ],
+      "date_start": "2023-01",
+      "date_end": "2023-11",
+      "outcomes": [
+        "Scaled processing to 15,000 tasks/second with sub-20ms scheduling latency"
+      ],
+      "provenance": "public_evidence",
+      "source_url": "https://github.com/alexchen/taskflow",
+      "attributes": {
+        "jd_relevance": 0.92,
+        "technical_depth": 0.88,
+        "ownership": 0.85,
+        "collaboration": 0.70,
+        "recency": 0.85,
+        "evidence_strength": 0.88
+      }
+    },
+    {
+      "evidence_id": "ev_002",
+      "type": "work_experience",
+      "title": "High-Throughput Payment Ingestion Engine",
+      "technologies": ["Go", "Kafka", "PostgreSQL", "Prometheus"],
+      "role": "Senior Backend Engineer",
+      "responsibilities": [
+        "Engineered idempotent transaction settlement consumer",
+        "Partitioned PostgreSQL ledger tables handling 50M records/month",
+        "Instrumented distributed tracing with OpenTelemetry"
+      ],
+      "date_start": "2021-06",
+      "date_end": "2024-02",
+      "outcomes": [
+        "Reduced payment reconciliation latency by 64% and eliminated race conditions"
+      ],
+      "provenance": "candidate_provided",
+      "source_url": null,
+      "attributes": {
+        "jd_relevance": 0.95,
+        "technical_depth": 0.90,
+        "ownership": 0.80,
+        "collaboration": 0.85,
+        "recency": 0.90,
+        "evidence_strength": 0.75
+      }
+    },
+    {
+      "evidence_id": "ev_003",
+      "type": "contribution",
+      "title": "AsyncPG Connection Pool Patch",
+      "technologies": ["Python", "C", "PostgreSQL"],
+      "role": "Open Source Contributor",
+      "responsibilities": [
+        "Patched socket reconnection leak on SSL renegotiation"
+      ],
+      "date_start": "2023-08",
+      "date_end": "2023-09",
+      "outcomes": [
+        "Merged into upstream release v0.28"
+      ],
+      "provenance": "public_evidence",
+      "source_url": "https://github.com/MagicStack/asyncpg/pull/1042",
+      "attributes": {
+        "jd_relevance": 0.80,
+        "technical_depth": 0.85,
+        "ownership": 0.65,
+        "collaboration": 0.90,
+        "recency": 0.80,
+        "evidence_strength": 0.95
+      }
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "cl_001",
+      "text": "Architected distributed locking system resilient to network partitions",
+      "scope": "designed",
+      "linked_evidence": ["ev_001"]
+    },
+    {
+      "claim_id": "cl_002",
+      "text": "Optimized high-volume PostgreSQL database schemas and connection pooling",
+      "scope": "optimized",
+      "linked_evidence": ["ev_002", "ev_003"]
+    },
+    {
+      "claim_id": "cl_003",
+      "text": "Spearheaded zero-downtime deployment pipelines for mission-critical microservices",
+      "scope": "led",
+      "linked_evidence": ["ev_001", "ev_002"]
+    }
+  ],
+  "competency_coverage": [
+    {
+      "competency": "Distributed System Design & Concurrency",
+      "covered_by": ["ev_001", "ev_002"],
+      "note": "Demonstrated practical mastery with Redis distributed locks and Kafka streaming."
+    },
+    {
+      "competency": "Database Internals & Data Modeling",
+      "covered_by": ["ev_002", "ev_003"],
+      "note": "Strong signals across indexing, partitioning, and connection pool internals."
+    },
+    {
+      "competency": "API Architecture & Reliability",
+      "covered_by": ["ev_001"],
+      "note": "Good FastAPI foundation; gRPC and rate-limiting depth not explicitly documented."
+    },
+    {
+      "competency": "Observability & Performance Profiling",
+      "covered_by": ["ev_002"],
+      "note": "Prometheus and tracing mentioned in payments engine."
+    }
+  ],
+  "notable_gaps": [
+    "No public evidence regarding gRPC or multi-region failover protocols."
+  ]
+}
