@@ -39,12 +39,20 @@ def run_evaluation_pipeline(candidate_id: str):
             logger.error(f"Candidate {candidate_id} not found for evaluation.")
             return
 
+        # Select the session with recorded turns or submitted state
         session = (
             db.query(DBSession)
-            .filter(DBSession.candidate_id == candidate_id)
+            .filter(DBSession.candidate_id == candidate_id, DBSession.turn_count > 0)
             .order_by(DBSession.created_at.desc())
             .first()
         )
+        if not session:
+            session = (
+                db.query(DBSession)
+                .filter(DBSession.candidate_id == candidate_id)
+                .order_by(DBSession.created_at.desc())
+                .first()
+            )
         if not session:
             logger.error(f"No assessment session found for candidate {candidate_id}.")
             return

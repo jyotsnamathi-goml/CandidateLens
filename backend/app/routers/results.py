@@ -2,8 +2,10 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_hr_user
+from app.config import settings
 from app.db import get_db
 from app.models import Audit, Candidate, Result
+from app.models import Session as DBSession
 from app.schemas.api import CandidateFullResultOut
 from app.services.evaluation import run_evaluation_pipeline
 
@@ -23,10 +25,20 @@ def get_candidate_result(
 
     res = db.query(Result).filter(Result.candidate_id == candidate_id).first()
 
+    # Query candidate's single existing assessment session
+    sess = (
+        db.query(DBSession)
+        .filter(DBSession.candidate_id == candidate_id)
+        .order_by(DBSession.created_at.desc())
+        .first()
+    )
+    assessment_link = f"{settings.FRONTEND_ORIGIN}/assess/{sess.token_jti}" if sess else None
+
     return CandidateFullResultOut(
         candidate_id=candidate_id,
         role_id=cand.role_id,
         status=cand.status,
+        assessment_link=assessment_link,
         report=res.report if res else None,
         scoring_inputs_hash=res.scoring_inputs_hash if res else None,
     )

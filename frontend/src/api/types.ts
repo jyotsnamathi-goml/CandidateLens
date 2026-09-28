@@ -134,6 +134,7 @@ export interface CandidateResultResponse {
   candidate_id: string;
   role_id: string;
   status: string;
+  assessment_link?: string;
   report?: ReadinessReport;
   scoring_inputs_hash?: string;
 }

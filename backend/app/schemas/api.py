@@ -154,6 +154,7 @@ class CandidateFullResultOut(BaseModel):
     candidate_id: str
     role_id: str
     status: str
+    assessment_link: str | None = None
     report: ReadinessReport | None = None
     scoring_inputs_hash: str | None = None
 

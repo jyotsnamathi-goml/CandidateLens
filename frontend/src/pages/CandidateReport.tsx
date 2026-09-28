@@ -47,6 +47,18 @@ export const CandidateReport: React.FC = () => {
     },
   });
 
+  const currentLink = assessmentLink || data?.assessment_link;
+
+  const handleCopyLink = () => {
+    if (currentLink) {
+      navigator.clipboard.writeText(currentLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } else {
+      generateLinkMutation.mutate();
+    }
+  };
+
   const generateLinkMutation = useMutation({
     mutationFn: () => api.createAssessmentLink(candidateId!),
     onSuccess: (res) => {
@@ -54,6 +66,7 @@ export const CandidateReport: React.FC = () => {
       navigator.clipboard.writeText(res.link);
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
+      refetch();
     },
     onError: (err: any) => {
       alert(err.message || 'Failed to generate assessment link.');
@@ -100,12 +113,12 @@ export const CandidateReport: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2.5">
           <button
-            onClick={() => generateLinkMutation.mutate()}
+            onClick={handleCopyLink}
             disabled={generateLinkMutation.isPending}
             className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 text-xs font-semibold transition-colors"
           >
             <LinkIcon className="w-3.5 h-3.5" />
-            <span>{copied ? 'Link Copied!' : 'Assessment Link'}</span>
+            <span>{copied ? 'Link Copied!' : currentLink ? 'Copy Assessment Link' : 'Generate Assessment Link'}</span>
           </button>
 
           <button
@@ -138,24 +151,32 @@ export const CandidateReport: React.FC = () => {
       )}
 
       {/* Generated Link Alert Banner */}
-      {assessmentLink && (
+      {currentLink && (
         <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <div className="flex items-center space-x-2 text-emerald-400">
             <Check className="w-4 h-4 flex-shrink-0" />
-            <span className="font-semibold">Candidate Assessment Link Generated & Copied to Clipboard:</span>
+            <span className="font-semibold">Candidate Assessment Link:</span>
             <code className="bg-slate-900 px-2 py-0.5 rounded text-slate-300 font-mono select-all">
-              {assessmentLink}
+              {currentLink}
             </code>
           </div>
-          <a
-            href={assessmentLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-emerald-400 hover:underline flex items-center space-x-1 font-semibold"
-          >
-            <span>Open Candidate View</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleCopyLink}
+              className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 underline"
+            >
+              {copied ? 'Copied!' : 'Copy Link'}
+            </button>
+            <a
+              href={currentLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-400 hover:underline flex items-center space-x-1 font-semibold"
+            >
+              <span>Open Candidate View</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
       )}
 
@@ -175,16 +196,31 @@ export const CandidateReport: React.FC = () => {
               : 'Assessment Pending'}
           </h2>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
-            Generate an assessment link to invite the candidate to complete the 6-question practical assessment.
-            Once completed, Call 3 will evaluate all answers concurrently and generate the full readiness signal.
+            {currentLink
+              ? 'Candidate has a designated assessment link. Invite them to complete the 6-question practical assessment.'
+              : 'Generate an assessment link to invite the candidate to complete the 6-question practical assessment.'}
           </p>
-          <button
-            onClick={() => generateLinkMutation.mutate()}
-            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-heading font-bold text-xs shadow-lg shadow-emerald-500/20"
-          >
-            <LinkIcon className="w-4 h-4" />
-            <span>Generate & Copy Assessment Link</span>
-          </button>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={handleCopyLink}
+              disabled={generateLinkMutation.isPending}
+              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-heading font-bold text-xs shadow-lg shadow-emerald-500/20"
+            >
+              <LinkIcon className="w-4 h-4" />
+              <span>{copied ? 'Link Copied!' : currentLink ? 'Copy Assessment Link' : 'Generate Assessment Link'}</span>
+            </button>
+            {currentLink && (
+              <a
+                href={currentLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-semibold"
+              >
+                <span>Open Candidate View</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            )}
+          </div>
         </div>
       )}
 

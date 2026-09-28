@@ -30,40 +30,80 @@ def ensure_utc(dt: datetime | None) -> datetime | None:
     return dt
 
 
+def resolve_assessment_session(token: str, db: Session) -> DBSession:
+    """Find assessment session by token_jti, candidate_id, or signed token."""
+    # 1. By token_jti
+    session = db.query(DBSession).filter(DBSession.token_jti == token).first()
+    if session:
+        return session
+
+    # 2. By candidate_id
+    session = (
+        db.query(DBSession)
+        .filter(DBSession.candidate_id == token)
+        .order_by(DBSession.created_at.desc())
+        .first()
+    )
+    if session:
+        return session
+
+    # 3. By signed token
+    try:
+        data = verify_candidate_token(token)
+        candidate_id = data.get("candidate_id")
+        jti = data.get("jti")
+        session = (
+            db.query(DBSession)
+            .filter(DBSession.candidate_id == candidate_id, DBSession.token_jti == jti)
+            .first()
+        )
+        if session:
+            return session
+    except Exception:
+        pass
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment session not found.")
+
+
 @router.post("/candidates/{candidate_id}/assessment-link", response_model=AssessmentLinkResponse)
 def create_assessment_link(
     candidate_id: str,
     db: Session = Depends(get_db),
     hr_user: str = Depends(get_current_hr_user),
 ):
-    """Generate signed, expiring assessment link for candidate."""
+    """Generate or return single deterministic assessment link for candidate."""
     cand = db.query(Candidate).filter(Candidate.candidate_id == candidate_id).first()
     if not cand:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidate not found")
 
-    if cand.status not in ["READY", "IN_ASSESSMENT", "COMPLETED"]:
+    if cand.status not in ["READY", "IN_ASSESSMENT", "COMPLETED", "EVALUATING"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Candidate status is '{cand.status}'. Ingestion must finish before generating assessment."
         )
 
-    # Check for existing active session
+    # Check for existing session - enforce strictly 1 assessment link per candidate
     existing_session = (
         db.query(DBSession)
-        .filter(DBSession.candidate_id == candidate_id, DBSession.state.in_(["NOT_STARTED", "ACTIVE"]))
+        .filter(DBSession.candidate_id == candidate_id)
+        .order_by(DBSession.created_at.desc())
         .first()
     )
 
-    if existing_session and ensure_utc(existing_session.expires_at) > datetime.now(timezone.utc):
-        token = generate_candidate_token(cand.candidate_id, existing_session.token_jti)
-        link = f"{settings.FRONTEND_ORIGIN}/assess/{token}"
+    if existing_session:
+        # Extend expiration if needed
+        now = datetime.now(timezone.utc)
+        if ensure_utc(existing_session.expires_at) < now:
+            existing_session.expires_at = now + timedelta(hours=settings.ASSESSMENT_LINK_TTL_HOURS)
+            db.commit()
+        link = f"{settings.FRONTEND_ORIGIN}/assess/{existing_session.token_jti}"
         return AssessmentLinkResponse(
             link=link,
-            token=token,
+            token=existing_session.token_jti,
             expires_at=existing_session.expires_at,
         )
 
-    # Generate question plan (LLM Call 2)
+    # Generate question plan (LLM Call 2) only ONCE
     role = cand.role
     profile = cand.profile
     competencies = role.competencies or []
@@ -100,8 +140,7 @@ def create_assessment_link(
     db.commit()
     db.refresh(new_session)
 
-    token = generate_candidate_token(cand.candidate_id, jti)
-    link = f"{settings.FRONTEND_ORIGIN}/assess/{token}"
+    link = f"{settings.FRONTEND_ORIGIN}/assess/{jti}"
 
     audit = Audit(
         entity_id=candidate_id,
@@ -113,25 +152,43 @@ def create_assessment_link(
 
     return AssessmentLinkResponse(
         link=link,
-        token=token,
+        token=jti,
         expires_at=expires_at,
     )
+
+
+@router.get("/candidates/{candidate_id}/assessment-link", response_model=AssessmentLinkResponse)
+def get_assessment_link(
+    candidate_id: str,
+    db: Session = Depends(get_db),
+    hr_user: str = Depends(get_current_hr_user),
+):
+    """Retrieve existing assessment link for candidate, or generate one if not present."""
+    cand = db.query(Candidate).filter(Candidate.candidate_id == candidate_id).first()
+    if not cand:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidate not found")
+
+    existing_session = (
+        db.query(DBSession)
+        .filter(DBSession.candidate_id == candidate_id)
+        .order_by(DBSession.created_at.desc())
+        .first()
+    )
+    if existing_session:
+        link = f"{settings.FRONTEND_ORIGIN}/assess/{existing_session.token_jti}"
+        return AssessmentLinkResponse(
+            link=link,
+            token=existing_session.token_jti,
+            expires_at=existing_session.expires_at,
+        )
+
+    return create_assessment_link(candidate_id=candidate_id, db=db, hr_user=hr_user)
 
 
 @router.get("/assessment/{token}", response_model=AssessmentSessionOut)
 def get_assessment_session(token: str, db: Session = Depends(get_db)):
     """Public endpoint for candidate to view/resume assessment."""
-    token_data = verify_candidate_token(token)
-    candidate_id = token_data["candidate_id"]
-    jti = token_data["jti"]
-
-    session = (
-        db.query(DBSession)
-        .filter(DBSession.candidate_id == candidate_id, DBSession.token_jti == jti)
-        .first()
-    )
-    if not session:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment session not found.")
+    session = resolve_assessment_session(token, db)
 
     expires_at = ensure_utc(session.expires_at)
     if (expires_at and expires_at < datetime.now(timezone.utc)) or session.state == "EXPIRED":
@@ -188,15 +245,7 @@ def submit_answer(
     db: Session = Depends(get_db),
 ):
     """Candidate submits answer to current question."""
-    token_data = verify_candidate_token(token)
-    candidate_id = token_data["candidate_id"]
-    jti = token_data["jti"]
-
-    session = (
-        db.query(DBSession)
-        .filter(DBSession.candidate_id == candidate_id, DBSession.token_jti == jti)
-        .first()
-    )
+    session = resolve_assessment_session(token, db)
     if not session or session.state not in ["ACTIVE", "NOT_STARTED"]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Assessment session not active.")
 
