@@ -1,16 +1,16 @@
 # CandidateLens: LLM Cost & Token Usage Report
 
-Generated: 2026-09-28 08:29:18 UTC
+Generated: 2026-09-28 12:48:32 UTC
 
 ## 1. Executive Summary
 
 | Metric | Measured / Projected Value |
 |---|---|
-| **Total Recorded LLM Calls** | 0 |
-| **Distinct Evaluated Candidates** | 4 (synthetic demo) |
-| **Total Token Volume** | 0 tokens (0 in / 0 out) |
-| **Average Cost per Candidate** | **$0.0349 USD** |
-| **Projected Cost for 100 Candidates / Month** | **$3.49 USD** |
+| **Total Recorded LLM Calls** | 52 |
+| **Distinct Evaluated Candidates** | 2 |
+| **Total Token Volume** | 83,328 tokens (22,307 in / 61,021 out) |
+| **Average Cost per Candidate** | **$0.0732 USD** |
+| **Projected Cost for 100 Candidates / Month** | **$7.32 USD** |
 
 CandidateLens delivers a rigorous pre-Round 1 technical readiness assessment for **less than $0.05 per candidate** in OpenAI API fees.
 
@@ -20,9 +20,10 @@ CandidateLens delivers a rigorous pre-Round 1 technical readiness assessment for
 
 | Stage | Call Count | Models Used | Avg Input Tokens | Avg Output Tokens | Total Stage Cost |
 |---|---|---|---|---|---|
-| `extraction` (mock) | 4 | gpt-4o-mini | 1,850 | 620 | $0.0006 |
-| `question_plan` (mock) | 4 | gpt-4o | 2,100 | 850 | $0.0138 |
-| `evaluation` (mock) | 4 | gpt-4o | 3,400 | 1,200 | $0.0205 |
+| `jd_parsing` | 11 | mock-gpt-4o-mini, gpt-4o-mini | 22 | 255 | $0.0002 |
+| `extraction` | 12 | mock-gpt-4o-mini, gpt-4o-mini | 532 | 1,092 | $0.0039 |
+| `question_plan` | 17 | mock-gpt-4o, gpt-4o | 581 | 1,356 | $0.0984 |
+| `evaluation` | 12 | mock-gpt-4o, gpt-4o | 481 | 1,836 | $0.0438 |
 
 ---
 
@@ -49,7 +50,7 @@ CandidateLens delivers a rigorous pre-Round 1 technical readiness assessment for
 
 | Scenario | Cost / Candidate | 100 Candidates / Month | Notes |
 |---|---|---|---|
-| **Baseline Architecture** (1 mini + 2 gpt-4o) | **$0.0349** | **$3.49** | Default production configuration |
+| **Baseline Architecture** (1 mini + 2 gpt-4o) | **$0.0732** | **$7.32** | Default production configuration |
 | **All-Mini Configuration** (Replace gpt-4o with gpt-4o-mini) | ~$0.0035 | ~$0.35 | 90% cost reduction; suitable for high-volume entry-level roles |
 | **Adaptive Follow-ups Enabled** (`ENABLE_LLM_FOLLOWUPS=true`) | ~$0.0580 | ~$5.80 | Max 2 extra gpt-4o calls per candidate |
 | **Full SRS Comparison** (25+ LLM calls per candidate) | ~$0.8500 | ~$85.00 | Demonstrates POC architectural efficiency |

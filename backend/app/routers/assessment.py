@@ -291,7 +291,7 @@ def submit_answer(
         db.commit()
 
         # Trigger background evaluation
-        background_tasks.add_task(run_evaluation_pipeline, candidate_id)
+        background_tasks.add_task(run_evaluation_pipeline, session.candidate_id)
 
         return AssessmentNextStepOut(
             status="completed",

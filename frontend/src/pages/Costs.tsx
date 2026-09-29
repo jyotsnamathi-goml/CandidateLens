@@ -36,7 +36,18 @@ export const Costs: React.FC = () => {
       </div>
 
       {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="glass-panel p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/10 space-y-2">
+          <div className="flex items-center justify-between text-emerald-400">
+            <span className="text-xs font-semibold uppercase tracking-wider font-mono">Total Spend Till Now</span>
+            <DollarSign className="w-4 h-4 text-emerald-400" />
+          </div>
+          <div className="text-2xl font-heading font-bold text-white">
+            ${c.total_cost_usd.toFixed(4)}
+          </div>
+          <span className="text-[11px] text-emerald-400 font-medium">Actual OpenAI spend to date</span>
+        </div>
+
         <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-2">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-xs font-semibold uppercase tracking-wider font-mono">Avg Cost / Candidate</span>
