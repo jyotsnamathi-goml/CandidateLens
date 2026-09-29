@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Type, TypeVar
 
 import httpx
-from openai import APIError, OpenAI, RateLimitError
+from openai import APIError, LengthFinishReasonError, OpenAI, RateLimitError
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
 
@@ -212,6 +212,7 @@ def call_structured(
     start_time = time.time()
     last_err: Exception | None = None
 
+    current_max_tokens = max_output_tokens
     for attempt in range(2):  # initial attempt + 1 retry on parse error
         try:
             # API retry with backoff for rate limits/5xx
@@ -224,8 +225,8 @@ def call_structured(
                         "response_format": schema,
                         "temperature": temperature,
                     }
-                    if max_output_tokens:
-                        kwargs["max_tokens"] = max_output_tokens
+                    if current_max_tokens:
+                        kwargs["max_tokens"] = current_max_tokens
 
                     completion = client.beta.chat.completions.parse(**kwargs)
                     break
@@ -259,6 +260,21 @@ def call_structured(
                 mock=False,
             )
             return parsed
+
+        except LengthFinishReasonError as err:
+            last_err = err
+            total_retries += 1
+            if current_max_tokens:
+                current_max_tokens = min(int(current_max_tokens * 1.5), 8192)
+            logger.warning(
+                f"Length limit reached on attempt {attempt + 1} for stage '{stage}'. "
+                f"Increased max_tokens to {current_max_tokens}. Retrying with conciseness prompt."
+            )
+            messages.append({
+                "role": "user",
+                "content": "Previous output was cut off because it exceeded the max token limit. "
+                           "Please output complete valid JSON matching the schema, keeping bullet points concise.",
+            })
 
         except (ValidationError, ValueError) as err:
             last_err = err
