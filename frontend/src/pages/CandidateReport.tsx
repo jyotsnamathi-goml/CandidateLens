@@ -47,7 +47,13 @@ export const CandidateReport: React.FC = () => {
     },
   });
 
-  const currentLink = assessmentLink || data?.assessment_link;
+  const formatNetworkLink = (link?: string) => {
+    if (!link) return undefined;
+    return link.replace(/^https?:\/\/[^\/]+/, window.location.origin);
+  };
+
+  const rawLink = assessmentLink || data?.assessment_link;
+  const currentLink = formatNetworkLink(rawLink);
 
   const handleCopyLink = () => {
     if (currentLink) {
@@ -62,8 +68,9 @@ export const CandidateReport: React.FC = () => {
   const generateLinkMutation = useMutation({
     mutationFn: () => api.createAssessmentLink(candidateId!),
     onSuccess: (res) => {
-      setAssessmentLink(res.link);
-      navigator.clipboard.writeText(res.link);
+      const netLink = formatNetworkLink(res.link) || res.link;
+      setAssessmentLink(netLink);
+      navigator.clipboard.writeText(netLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
       refetch();
