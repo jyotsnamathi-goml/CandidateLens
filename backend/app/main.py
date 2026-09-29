@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.db import Base, engine
+from app.db import Base, engine, init_db_and_migrate
 from app.logging_setup import setup_logging
 from app.routers import admin, assessment, auth, candidates, results, roles
 
@@ -13,7 +13,7 @@ from app.routers import admin, assessment, auth, candidates, results, roles
 async def lifespan(app: FastAPI):
     # Initialize logging and database tables on startup
     setup_logging()
-    Base.metadata.create_all(bind=engine)
+    init_db_and_migrate()
     yield
 
 

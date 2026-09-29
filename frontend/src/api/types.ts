@@ -139,6 +139,13 @@ export interface CandidateResultResponse {
   scoring_inputs_hash?: string;
 }
 
+export interface ProctoringConfig {
+  enabled: boolean;
+  disable_copy_paste: boolean;
+  track_tab_switch: boolean;
+  max_tab_warnings?: number;
+}
+
 export interface AssessmentSession {
   session_id: string;
   candidate_name: string;
@@ -146,6 +153,7 @@ export interface AssessmentSession {
   state: string;
   total_planned: number;
   current_turn: number;
+  question_index: number;
   max_turns: number;
   question?: {
     question_id: string;
@@ -156,6 +164,7 @@ export interface AssessmentSession {
   };
   is_followup: boolean;
   time_remaining_seconds: number;
+  proctoring?: ProctoringConfig;
 }
 
 export interface CostSummary {

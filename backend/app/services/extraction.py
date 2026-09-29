@@ -21,6 +21,7 @@ def run_extraction(
     resume_text: str,
     github_data: dict[str, Any],
     portfolio_text: str,
+    linkedin_data: dict[str, Any] | None = None,
     db: Session | None = None,
 ) -> ExtractionResult:
     """Execute LLM Call 1 to extract structured evidence and claims."""
@@ -48,6 +49,20 @@ def run_extraction(
     gh_json = json.dumps(gh_summary)
     trimmed_gh = trim_to_budget(gh_json, 6000)
 
+    # Clean LinkedIn data for prompt
+    li_data = linkedin_data or {}
+    li_summary = {
+        "url": li_data.get("url"),
+        "username": li_data.get("username"),
+        "headline": li_data.get("headline"),
+        "summary": li_data.get("summary"),
+        "experiences": li_data.get("experiences", []),
+        "skills": li_data.get("skills", []),
+        "profile_excerpt": (li_data.get("raw_excerpt") or "")[:2000],
+    }
+    li_json = json.dumps(li_summary)
+    trimmed_li = trim_to_budget(li_json, 4000)
+
     comp_summary = [
         {"name": c.get("name"), "description": c.get("description"), "rank": c.get("rank")}
         for c in competencies
@@ -64,6 +79,10 @@ def run_extraction(
 <github>
 {trimmed_gh}
 </github>
+
+<linkedin>
+{trimmed_li}
+</linkedin>
 
 <portfolio>
 {trimmed_portfolio}

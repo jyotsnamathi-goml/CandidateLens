@@ -14,6 +14,7 @@ from app.schemas.api import (
     AssessmentLinkResponse,
     AssessmentNextStepOut,
     AssessmentSessionOut,
+    ProctoringConfig,
 )
 from app.services.assessment import count_words, get_current_question_state
 from app.services.evaluation import run_evaluation_pipeline
@@ -196,6 +197,13 @@ def get_assessment_session(token: str, db: Session = Depends(get_db)):
         db.commit()
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="This assessment session has expired.")
 
+    proctoring_config = ProctoringConfig(
+        enabled=settings.ENABLE_PROCTORING,
+        disable_copy_paste=settings.ENABLE_PROCTORING and settings.PROCTORING_DISABLE_COPY_PASTE,
+        track_tab_switch=settings.ENABLE_PROCTORING and settings.PROCTORING_TRACK_TAB_SWITCH,
+        max_tab_warnings=settings.PROCTORING_MAX_TAB_SWITCH_WARNINGS,
+    )
+
     if session.state in ["SUBMITTED", "EVALUATING", "DONE"]:
         return AssessmentSessionOut(
             session_id=session.session_id,
@@ -204,10 +212,12 @@ def get_assessment_session(token: str, db: Session = Depends(get_db)):
             state=session.state,
             total_planned=len(session.question_plan or []),
             current_turn=session.turn_count,
+            question_index=len(session.question_plan or []),
             max_turns=settings.MAX_TURNS,
             question=None,
             is_followup=False,
             time_remaining_seconds=0,
+            proctoring=proctoring_config,
         )
 
     if session.state == "NOT_STARTED":
@@ -230,10 +240,12 @@ def get_assessment_session(token: str, db: Session = Depends(get_db)):
         state=session.state,
         total_planned=len(session.question_plan or []),
         current_turn=q_state["turn_no"],
+        question_index=q_state.get("question_index", 1),
         max_turns=settings.MAX_TURNS,
         question=q_state["question"],
         is_followup=q_state["is_followup"],
         time_remaining_seconds=time_remaining,
+        proctoring=proctoring_config,
     )
 
 
@@ -257,6 +269,7 @@ def submit_answer(
             message="Assessment already finished.",
             question=None,
             turn_no=session.turn_count,
+            question_index=q_state.get("question_index", len(session.question_plan or [])),
             is_followup=False,
         )
 
@@ -279,6 +292,19 @@ def submit_answer(
     session.turn_count = turn_no
     db.commit()
 
+    if payload.tab_switches > 0:
+        audit = Audit(
+            entity_id=session.candidate_id,
+            action="PROCTORING_TAB_SWITCH",
+            detail={
+                "session_id": session.session_id,
+                "turn_no": turn_no,
+                "tab_switches": payload.tab_switches,
+            },
+        )
+        db.add(audit)
+        db.commit()
+
     # Re-evaluate session state
     next_q_state = get_current_question_state(session, db)
     next_q = next_q_state.get("question")
@@ -298,6 +324,7 @@ def submit_answer(
             message="Thank you! Your assessment has been submitted for evaluation.",
             question=None,
             turn_no=session.turn_count,
+            question_index=next_q_state.get("question_index", len(session.question_plan or [])),
             is_followup=False,
         )
 
@@ -307,5 +334,6 @@ def submit_answer(
         message="Answer recorded.",
         question=next_q,
         turn_no=session.turn_count + 1,
+        question_index=next_q_state.get("question_index", 1),
         is_followup=next_q_state["is_followup"],
     )

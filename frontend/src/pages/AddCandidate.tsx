@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Upload, Github, Globe, Shield, ArrowRight, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { Upload, Github, Globe, Linkedin, Shield, ArrowRight, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { api } from '../api/client';
 import { IngestionStep } from '../api/types';
 
@@ -11,6 +11,7 @@ export const AddCandidate: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
   const [githubUsername, setGithubUsername] = useState('');
   const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [linkedinUrl, setLinkedinUrl] = useState('');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +45,9 @@ export const AddCandidate: React.FC = () => {
       }
       if (portfolioUrl.trim()) {
         formData.append('portfolio_url', portfolioUrl.trim());
+      }
+      if (linkedinUrl.trim()) {
+        formData.append('linkedin_url', linkedinUrl.trim());
       }
       formData.append('resume', resumeFile);
 
@@ -157,17 +161,31 @@ export const AddCandidate: React.FC = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
                   <Github className="w-3.5 h-3.5 text-slate-400" />
-                  <span>GitHub Username or URL</span>
+                  <span>GitHub Handle / URL</span>
                 </label>
                 <input
                   type="text"
                   value={githubUsername}
                   onChange={(e) => setGithubUsername(e.target.value)}
                   placeholder="e.g. alexchen"
+                  className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
+                  <Linkedin className="w-3.5 h-3.5 text-sky-400" />
+                  <span>LinkedIn Profile URL</span>
+                </label>
+                <input
+                  type="text"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  placeholder="https://linkedin.com/in/alexchen"
                   className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
                 />
               </div>
@@ -213,7 +231,7 @@ export const AddCandidate: React.FC = () => {
                 <Shield className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                 <div className="text-xs text-slate-400 leading-relaxed">
                   <span className="text-slate-200 font-semibold block mb-0.5">Privacy Notice & Scope of Data Collection</span>
-                  CandidateLens fetches public metadata strictly for the provided GitHub handle and analyzes the single portfolio link.
+                  CandidateLens fetches public metadata strictly for the provided GitHub handle, LinkedIn profile, and portfolio link.
                   Protected demographic attributes are purged before LLM processing. All uploaded resumes and analysis artifacts are retained
                   for 90 days and can be purged immediately on demand.
                 </div>

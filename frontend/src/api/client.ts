@@ -119,10 +119,10 @@ export const api = {
     }),
   getAssessmentSession: (token: string) =>
     request<AssessmentSession>(`/assessment/${token}`),
-  submitAnswer: (token: string, answer_text: string, time_taken_seconds: number) =>
+  submitAnswer: (token: string, answer_text: string, time_taken_seconds: number, tab_switches: number = 0) =>
     request<any>(`/assessment/${token}/answers`, {
       method: 'POST',
-      body: JSON.stringify({ answer_text, time_taken_seconds }),
+      body: JSON.stringify({ answer_text, time_taken_seconds, tab_switches }),
     }),
 
   // Admin Costs

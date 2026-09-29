@@ -47,6 +47,7 @@ class Candidate(Base):
     display_name = Column(String(255), nullable=False)
     github_username = Column(String(100), nullable=True)
     portfolio_url = Column(String(500), nullable=True)
+    linkedin_url = Column(String(500), nullable=True)
     resume_path = Column(String(500), nullable=False)
     consent = Column(JSON, nullable=False, default=dict)  # accepted, timestamp, scope
     status = Column(String(50), nullable=False, default="INGESTING")  # INGESTING, READY, IN_ASSESSMENT, COMPLETED, FAILED

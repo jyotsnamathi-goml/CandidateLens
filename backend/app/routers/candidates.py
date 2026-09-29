@@ -41,6 +41,7 @@ async def create_candidate(
     consent: bool = Form(...),
     github_username: Optional[str] = Form(None),
     portfolio_url: Optional[str] = Form(None),
+    linkedin_url: Optional[str] = Form(None),
     resume: UploadFile = File(...),
     db: Session = Depends(get_db),
     hr_user: str = Depends(get_current_hr_user),
@@ -78,7 +79,7 @@ async def create_candidate(
     consent_record = {
         "accepted": True,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "scope": ["resume", "github_public", "portfolio"],
+        "scope": ["resume", "github_public", "portfolio", "linkedin_public"],
     }
 
     candidate = Candidate(
@@ -87,6 +88,7 @@ async def create_candidate(
         display_name=display_name.strip(),
         github_username=github_username.strip() if github_username else None,
         portfolio_url=portfolio_url.strip() if portfolio_url else None,
+        linkedin_url=linkedin_url.strip() if linkedin_url else None,
         resume_path=str(dest_file),
         consent=consent_record,
         status="INGESTING",

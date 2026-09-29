@@ -81,12 +81,13 @@ def get_current_question_state(session: DBSession, db: Session) -> dict[str, Any
         q_turns = turns_by_q.get(q_id, [])
 
         if not q_turns:
-            # Not started yet
+            # Base planned question, not started yet
             return {
                 "status": "active",
                 "question": q,
                 "is_followup": False,
                 "turn_no": turn_count + 1,
+                "question_index": idx + 1,
             }
         elif len(q_turns) == 1:
             # Check if last turn triggered follow-up
@@ -104,6 +105,7 @@ def get_current_question_state(session: DBSession, db: Session) -> dict[str, Any
                         "question": followup_q,
                         "is_followup": True,
                         "turn_no": turn_count + 1,
+                        "question_index": idx + 1,
                     }
 
     # All questions answered or turns exhausted
@@ -112,4 +114,5 @@ def get_current_question_state(session: DBSession, db: Session) -> dict[str, Any
         "question": None,
         "is_followup": False,
         "turn_no": turn_count,
+        "question_index": len(plan),
     }

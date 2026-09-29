@@ -40,10 +40,10 @@ export const AssessIndex: React.FC = () => {
     refetch();
   };
 
-  const handleAnswerSubmit = async (answer: string, secondsTaken: number) => {
+  const handleAnswerSubmit = async (answer: string, secondsTaken: number, tabSwitches: number = 0) => {
     setSubmitting(true);
     try {
-      const nextStep = await api.submitAnswer(token!, answer, secondsTaken);
+      const nextStep = await api.submitAnswer(token!, answer, secondsTaken, tabSwitches);
       refetch();
     } catch (err: any) {
       alert(err.message || 'Failed to submit answer.');

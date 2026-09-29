@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     ASSESSMENT_LINK_TTL_HOURS: int = 72
     VAGUE_ANSWER_MIN_WORDS: int = 40
 
+    # --- Proctoring ---
+    ENABLE_PROCTORING: bool = True
+    PROCTORING_DISABLE_COPY_PASTE: bool = True
+    PROCTORING_TRACK_TAB_SWITCH: bool = True
+    PROCTORING_MAX_TAB_SWITCH_WARNINGS: int = 3
+
     # --- Scoring ---
     SPARSE_FACTOR: float = 0.5
     BAND_STRONG_MIN: float = 80.0

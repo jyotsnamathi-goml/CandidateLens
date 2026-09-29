@@ -14,6 +14,7 @@ from app.db import SessionLocal
 from app.models import Audit, Candidate, Claim, Evidence, Profile
 from app.services.extraction import run_extraction
 from app.services.github_client import GitHubClient
+from app.services.linkedin_client import LinkedInClient
 from app.services.relevance import match_evidence_to_competencies
 from app.services.resume_parser import extract_text_from_path
 from app.services.sufficiency import evaluate_sufficiency
@@ -84,7 +85,27 @@ def run_candidate_ingestion(candidate_id: str):
             add_log_step(candidate, "github_fetch", "success", "No GitHub username provided.")
         db.commit()
 
-        # 3. Fetch Portfolio
+        # 3. Fetch LinkedIn
+        linkedin_data = {}
+        if getattr(candidate, "linkedin_url", None):
+            add_log_step(candidate, "linkedin_fetch", "in_progress", f"Scanning LinkedIn profile {candidate.linkedin_url}.")
+            db.commit()
+            try:
+                li_client = LinkedInClient()
+                linkedin_data = li_client.fetch_profile_evidence(
+                    url_or_username=candidate.linkedin_url,
+                    candidate_id=candidate.candidate_id,
+                )
+                status_desc = f"Extracted profile ({linkedin_data.get('headline') or linkedin_data.get('username')})."
+                add_log_step(candidate, "linkedin_fetch", "success", status_desc)
+            except Exception as e:
+                logger.warning(f"LinkedIn fetch failed for {candidate.candidate_id}: {e}")
+                add_log_step(candidate, "linkedin_fetch", "warning", f"LinkedIn scan partial/failed: {e}")
+        else:
+            add_log_step(candidate, "linkedin_fetch", "success", "No LinkedIn URL provided.")
+        db.commit()
+
+        # 4. Fetch Portfolio
         portfolio_text = ""
         if candidate.portfolio_url:
             add_log_step(candidate, "portfolio_fetch", "in_progress", f"Fetching portfolio {candidate.portfolio_url}.")
@@ -99,7 +120,7 @@ def run_candidate_ingestion(candidate_id: str):
             add_log_step(candidate, "portfolio_fetch", "success", "No portfolio URL provided.")
         db.commit()
 
-        # 4. LLM Call 1: Extraction
+        # 5. LLM Call 1: Extraction
         add_log_step(candidate, "llm_extraction", "in_progress", "Running structured extraction call.")
         db.commit()
 
@@ -110,6 +131,7 @@ def run_candidate_ingestion(candidate_id: str):
                 resume_text=resume_text,
                 github_data=github_data,
                 portfolio_text=portfolio_text,
+                linkedin_data=linkedin_data,
                 db=db,
             )
             add_log_step(

@@ -55,6 +55,7 @@ class CandidateCreate(BaseModel):
     display_name: str
     github_username: str | None = None
     portfolio_url: str | None = None
+    linkedin_url: str | None = None
     consent: bool = Field(..., description="Must be true to proceed with ingestion")
 
 
@@ -64,6 +65,7 @@ class CandidateOut(BaseModel):
     display_name: str
     github_username: str | None = None
     portfolio_url: str | None = None
+    linkedin_url: str | None = None
     status: str
     created_at: datetime
 
@@ -88,7 +90,14 @@ class TimelineOut(BaseModel):
     timeline: list[TimelineObservation]
 
 
-# --- Assessment ---
+# --- Assessment & Proctoring ---
+class ProctoringConfig(BaseModel):
+    enabled: bool = True
+    disable_copy_paste: bool = True
+    track_tab_switch: bool = True
+    max_tab_warnings: int = 3
+
+
 class AssessmentLinkResponse(BaseModel):
     link: str
     token: str
@@ -102,15 +111,18 @@ class AssessmentSessionOut(BaseModel):
     state: str
     total_planned: int = 6
     current_turn: int
+    question_index: int = 1
     max_turns: int
     question: dict[str, Any] | None = None  # question_id, kind, text, snippet if any
     is_followup: bool = False
     time_remaining_seconds: int
+    proctoring: ProctoringConfig = Field(default_factory=ProctoringConfig)
 
 
 class AssessmentAnswerSubmit(BaseModel):
     answer_text: str = Field(..., min_length=1)
     time_taken_seconds: int = 0
+    tab_switches: int = 0
 
 
 class AssessmentNextStepOut(BaseModel):
@@ -118,6 +130,7 @@ class AssessmentNextStepOut(BaseModel):
     message: str
     question: dict[str, Any] | None = None
     turn_no: int
+    question_index: int = 1
     is_followup: bool = False
 
 

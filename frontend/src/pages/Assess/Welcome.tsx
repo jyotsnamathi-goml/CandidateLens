@@ -56,6 +56,23 @@ export const AssessWelcome: React.FC<Props> = ({ session, onStart }) => {
           </ul>
         </div>
 
+        {session.proctoring?.enabled && (
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-slate-300 space-y-1.5">
+            <div className="flex items-center space-x-2 text-amber-400 font-semibold">
+              <Shield className="w-4 h-4" />
+              <span>Assessment Proctoring Active</span>
+            </div>
+            <ul className="text-[11px] text-slate-400 space-y-1 list-disc list-inside">
+              {session.proctoring.disable_copy_paste && (
+                <li>Copy & Paste functionality is disabled in the response editor to ensure original answers.</li>
+              )}
+              {session.proctoring.track_tab_switch && (
+                <li>Tab switching and window blur events are recorded during the session. Please remain on this tab.</li>
+              )}
+            </ul>
+          </div>
+        )}
+
         <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-[11px] text-slate-400 space-y-1">
           <span className="font-semibold text-slate-300 block">Privacy & Data Retention:</span>
           Your responses and assessment data are retained for 90 days for this hiring process and can be deleted
